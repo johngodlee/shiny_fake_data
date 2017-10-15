@@ -14,6 +14,25 @@ textInputRow<-function (inputId, label, value = "")
 			tags$input(id = inputId, type = "text", value = value,class="input-small"))
 }
 
+# ggplot2 theme
+theme.ggplot <- function(){
+	theme_bw()+
+		theme(axis.text.x=element_text(size=12, angle=45, vjust=1, hjust=1),
+					axis.text.y=element_text(size=12),
+					axis.title.x=element_text(size=14, face="plain"),             
+					axis.title.y=element_text(size=14, face="plain"),             
+					panel.grid.major.x=element_blank(),                                          
+					panel.grid.minor.x=element_blank(),
+					panel.grid.minor.y=element_blank(),
+					panel.grid.major.y=element_blank(),  
+					plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), units = , "cm"),
+					plot.title = element_text(size=20, vjust=1, hjust=0.5),
+					legend.text = element_text(size=12, face="italic"),          
+					legend.title = element_blank(),                              
+					legend.position=c(0.9, 0.9))
+}
+
+
 # Define UI ----
 ui <- fluidPage(
    
@@ -30,8 +49,8 @@ ui <- fluidPage(
    		hr(),
    		h1("Y"),
    		textInput(inputId = "y_label" , label = "Define Y column label", placeholder = "e.g. Relative_abundance"),
-   			textInputRow(inputId="y_lim_min", label="y min", value = 0.0),
-   			textInputRow(inputId="y_lim_max", label="y max", value = 0.5),
+   			textInputRow(inputId="y_lim_min", label="Y min", value = 0.0),
+   			textInputRow(inputId="y_lim_max", label="Y max", value = 0.5),
    			sliderInput(inputId = "y_sd", label = "Y Standard Deviation", min = 0, max = 100, value = 1, step = 1)
    	),
    	mainPanel(
@@ -49,15 +68,15 @@ ui <- fluidPage(
 server <- function(input, output) {
 	
 	# Table of dataset ----
-	
+
 	selectedData <- reactive({data.frame(
-		"y" = rnorm(
-			mean = as.numeric(input$y_lim_min) + (0.5*as.numeric(input$y_lim_max)), 
-			sd = as.numeric(input$y_sd), 
-			n = as.numeric(input$xy_n)),
 		"x" = rnorm(
 			mean = as.numeric(input$x_lim_min) + (0.5*as.numeric(input$x_lim_max)), 
 			sd = as.numeric(input$x_sd), 
+			n = as.numeric(input$xy_n)),
+		"y" = rnorm(
+			mean = as.numeric(input$y_lim_min) + (0.5*as.numeric(input$y_lim_max)), 
+			sd = as.numeric(input$y_sd), 
 			n = as.numeric(input$xy_n)))
 		})
 	
@@ -65,7 +84,12 @@ server <- function(input, output) {
 	
 	output$plot <- renderPlot(
 		ggplot(selectedData(), aes(x = x, y = y)) + 
-			geom_point()
+			geom_point() + 
+			theme.ggplot() + 
+			xlab(input$x_label) +
+			ylab(input$y_label)
+		
+			
 		)
 }
 # Run the application 
