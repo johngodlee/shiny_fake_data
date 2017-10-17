@@ -59,7 +59,9 @@ ui <- fluidPage(
    		hr(),
    		h3("Plot of data"),
    		plotOutput("plot"),
-   		downloadButton("downloadData", "Download")
+   		downloadButton("downloadData", "Download"),
+   		includeScript("www/script.js"),
+   		tags$div(class = "col", tags$canvas(id = "paintme", width = 600, height = 500))  # Draw a canvas 
    		)
    	)
    )

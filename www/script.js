@@ -52,7 +52,6 @@ window.onload = function() {
   gCanvas.addEventListener("mousedown", handleDown, false);    
   gCanvas.addEventListener("mouseup", handleUp, false);    
 
-
   var selectButton = document.getElementById('selectMode');
   selectButton.addEventListener("click", function() {
       gState = Mode.kSelecting;
