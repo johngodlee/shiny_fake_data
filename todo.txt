@@ -1,0 +1,10 @@
+* A Shiny app that allows a user to draw datasets on a graph then have the data points generated automatically, can slider Variance, disturbance points etc.
+	* Got some way with the UI, but haven't found a decent librayr for bezier curve drawing. Maybe in javascript:
+		* http://blogs.sitepointstatic.com/examples/tech/canvas-curves/bezier-curve.html
+		* https://cran.r-project.org/web/packages/bezier/bezier.pdf
+		* https://github.com/vrk/beziertool/
+			* https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/bezierCurveTo
+		* https://www.aridhia.com/blog/the-sky-is-not-the-limit-embedding-raw-html-and-javascript-to-create-dynamic-ui-elements-in-shiny-applications/ 
+	* Should I limit myself to 2 continuous distributions. Adding lots of conditionals for categorical variables is confusing and difficult
+	* Generating the min and max from the mean is not a good way of doing things. Think of better method
+	* Is there a way to make the standard deviation in x change with different values of y and vice versa - non-independent error 
