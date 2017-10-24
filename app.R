@@ -3,6 +3,8 @@
 # Packages ----
 library(shiny)
 library(ggplot2)
+library(dplyr)
+library(tidyr)
 
 # Functions ----
 
@@ -11,7 +13,7 @@ textInputRow<-function (inputId, label, value = "")
 {
 	div(style="display:inline-block",
 			tags$label(label, `for` = inputId), 
-			tags$input(id = inputId, type = "text", value = value,class="input-small"))
+			tags$input(id = inputId, type = "number", value = value,class="input-small"))
 }
 
 # ggplot2 theme
@@ -32,7 +34,6 @@ theme.ggplot <- function(){
 					legend.position=c(0.9, 0.9))
 }
 
-
 # Define UI ----
 ui <- fluidPage(
    
@@ -40,59 +41,104 @@ ui <- fluidPage(
    titlePanel("Create fake bivariate data"),
    sidebarLayout(
    	sidebarPanel(
-   		sliderInput(inputId = "xy_n", label = "Number of data points", min = 2, max = 100, value = 5, step = 1),
+   		sliderInput(inputId = "xy_n", 
+   								label = "Number of data points", 
+   								min = 2, max = 100, value = 5, step = 1),
+   		selectInput(inputId = "distrib_type", 
+   								label = "Distribution Type", 
+   								choices  = c("Linear" = "lin", 
+   														 "Quadratic" = "quad")),
    		h1("X"),
-   		textInput(inputId = "x_label" , label = "Define X column label", placeholder = "e.g. Species_name"),
    			textInputRow(inputId = "x_lim_min", label = "X min", value = 0.0),
-   			textInputRow(inputId = "x_lim_max", label = "X max", value = 0.5),
-   			sliderInput(inputId = "x_sd", label = "X Standard Deviation", min = 0, max = 100, value = 1, step = 1),
+   			textInputRow(inputId = "x_lim_max", label = "X max", value = 5),
    		hr(),
    		h1("Y"),
-   		textInput(inputId = "y_label" , label = "Define Y column label", placeholder = "e.g. Relative_abundance"),
    			textInputRow(inputId="y_lim_min", label="Y min", value = 0.0),
-   			textInputRow(inputId="y_lim_max", label="Y max", value = 0.5),
-   			sliderInput(inputId = "y_sd", label = "Y Standard Deviation", min = 0, max = 100, value = 1, step = 1)
+   			textInputRow(inputId="y_lim_max", label="Y max", value = 5),
+   			sliderInput(inputId = "y_noise", 
+   									label = "Y Noise", 
+   									min = 0, max = 100, value = 1, step = 1),
+   		conditionalPanel(condition = "input.distrib_type == 'quad'", 
+   										 numericInput(inputId = "quad_quad_coef", 
+   										 						 label = "Set the Quadratic Coefficient",
+   										 						 value = 2, min = 1, step = 1),
+   										 numericInput(inputId = "quad_lin_coef", 
+   										 						 label = "Set the Linear Coefficient",
+   										 						 value = 2, min = 1, step = 1)),
+   		hr(),
+   		downloadButton("download", "Download `.csv`")
    	),
    	mainPanel(
-   		h3("Head of data"),
-   		tableOutput("table"),
+   		fluidRow(
+   			column(4,
+   						 wellPanel(h3("Head of data"),
+   						 					tableOutput("head"))),
+   			column(7,
+   						 wellPanel(h3("Summary table"), 
+   						 					tableOutput("summ")))
+   			),
    		hr(),
    		h3("Plot of data"),
-   		plotOutput("plot"),
-   		downloadButton("downloadData", "Download"),
-   		includeScript("www/script.js"),
-   		tags$div(class = "col", tags$canvas(id = "paintme", width = 600, height = 500))  # Draw a canvas 
+   		plotOutput("plot")
    		)
    	)
-   )
-
+)
 # Define server logic required to draw a histogram
 server <- function(input, output) {
 	
-	# Table of dataset ----
+	# Function for quadratic equation
+	fn <- function(x){input$quad_quad_coef*x^2 + input$quad_lin_coef*x}
+	
+	# Create a dataframe
+	df <- reactive({
+	df <- data.frame("x" = seq(from = input$x_lim_min, to = input$x_lim_max, length.out = input$xy_n), 
+									 "y" = if (input$distrib_type == "lin") {
+									 	jitter(seq(from = input$y_lim_min, 
+									 						 to = input$y_lim_max, 
+									 						 length.out = input$xy_n),
+									 				 factor = input$y_noise)} 
+									 else {
+									 	jitter(fn(seq(from = input$y_lim_min, 
+									 								to = input$y_lim_max, 
+									 								length.out = input$xy_n)),
+									 				 factor = input$y_noise)})
+	})
+	
+	# Create an output table of the head of the data frame
+	output$head <- renderTable(head(df()))
+	
+	# Create an output table summary
+	output$summ <- renderTable({
+		df() %>%
+			gather("var", "val", 1:2) %>%
+			group_by(var) %>%
+			summarise(mean = mean(val),
+								median = median(val),
+								max = max(val),
+								min = min(val),
+								"25% Quant." = quantile(val, probs = 0.25),
+								"75% Quant." = quantile(val, probs = 0.75))
+	})
+		
 
-	selectedData <- reactive({data.frame(
-		"x" = rnorm(
-			mean = as.numeric(input$x_lim_min) + (0.5*as.numeric(input$x_lim_max)), 
-			sd = as.numeric(input$x_sd), 
-			n = as.numeric(input$xy_n)),
-		"y" = rnorm(
-			mean = as.numeric(input$y_lim_min) + (0.5*as.numeric(input$y_lim_max)), 
-			sd = as.numeric(input$y_sd), 
-			n = as.numeric(input$xy_n)))
-		})
-	
-	output$table <- renderTable(head(selectedData()))
-	
+	# Create an output plot of the dataframe
 	output$plot <- renderPlot(
-		ggplot(selectedData(), aes(x = x, y = y)) + 
+		ggplot(df(), aes(x = x, y = y)) + 
 			geom_point() + 
+			geom_smooth(method = "loess") + 
 			theme.ggplot() + 
 			xlab(input$x_label) +
-			ylab(input$y_label)
-		
-			
+			ylab(input$y_label) 
 		)
+	
+	# Create a csv file to download
+	output$download <- downloadHandler(
+		filename = "fake_data.csv",
+		content = function(file){
+			write.csv(df(), 
+								file, 
+								row.names = FALSE)}
+	)
 }
 # Run the application 
 shinyApp(ui = ui, server = server)
