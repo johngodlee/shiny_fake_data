@@ -47,7 +47,8 @@ ui <- fluidPage(
    		selectInput(inputId = "distrib_type", 
    								label = "Distribution Type", 
    								choices  = c("Linear" = "lin", 
-   														 "Quadratic" = "quad")),
+   														 "Quadratic" = "quad",
+   														 "Exponential" = "exp")),
    		h1("X"),
    			textInputRow(inputId = "x_lim_min", label = "X min", value = 0.0),
    			textInputRow(inputId = "x_lim_max", label = "X max", value = 5),
@@ -59,11 +60,20 @@ ui <- fluidPage(
    									label = "Y Noise", 
    									min = 0, max = 100, value = 1, step = 1),
    		conditionalPanel(condition = "input.distrib_type == 'quad'", 
+   										 hr(),
+   										 tags$p(withMathJax("$$Y = aX^2 + bX + c$$")),
    										 numericInput(inputId = "quad_quad_coef", 
-   										 						 label = "Set the Quadratic Coefficient",
+   										 						 label = "Set the Quadratic Coefficient (a)",
    										 						 value = 2, min = 1, step = 1),
    										 numericInput(inputId = "quad_lin_coef", 
-   										 						 label = "Set the Linear Coefficient",
+   										 						 label = "Set the Linear Coefficient (b)",
+   										 						 value = 2, min = 1, step = 1)),
+   		conditionalPanel(condition = "input.distrib_type == 'exp'",
+   										 hr(),
+   										 tags$p(withMathJax("$$Y = ab^X$$")),
+   										 numericInput(inputId = "exp_coef", "Set the Exponential Coefficient (a)",
+   										 						 value = 2, min = 1, step = 1),
+   										 numericInput(inputId = "exp_base", "Set the Exponential Base (b)",
    										 						 value = 2, min = 1, step = 1)),
    		hr(),
    		downloadButton("download", "Download `.csv`")
@@ -86,8 +96,9 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
 	
-	# Function for quadratic equation
-	fn <- function(x){input$quad_quad_coef*x^2 + input$quad_lin_coef*x}
+	# Functions for data distributions
+	fn_quad <- function(x){input$quad_quad_coef *x^2 + input$quad_lin_coef * x}
+	fn_exp <- function(x){input$exp_coef * input$exp_base^x}
 	
 	# Create a dataframe
 	df <- reactive({
@@ -96,13 +107,20 @@ server <- function(input, output) {
 									 	jitter(seq(from = input$y_lim_min, 
 									 						 to = input$y_lim_max, 
 									 						 length.out = input$xy_n),
-									 				 factor = input$y_noise)} 
-									 else {
-									 	jitter(fn(seq(from = input$y_lim_min, 
-									 								to = input$y_lim_max, 
-									 								length.out = input$xy_n)),
-									 				 factor = input$y_noise)})
-	})
+									 				 factor = input$y_noise)
+									 	} else { 
+									 		if (input$distrib_type == "exp") {
+									 	jitter(fn_exp(seq(from = input$y_lim_min, 
+									 										 to = input$y_lim_max, 
+									 										 length.out = input$xy_n)),
+									 				 factor = input$y_noise)
+									 			} else {
+									 	jitter(fn_quad(seq(from = input$y_lim_min, 
+									 										 to = input$y_lim_max, 
+									 										 length.out = input$xy_n)),
+									 				 factor = input$y_noise)
+									 	}})
+									 	})
 	
 	# Create an output table of the head of the data frame
 	output$head <- renderTable(head(df()))
