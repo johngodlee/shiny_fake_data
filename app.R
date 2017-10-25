@@ -125,7 +125,7 @@ server <- function(input, output) {
 	output$plot <- renderPlot(
 		ggplot(df(), aes(x = x, y = y)) + 
 			geom_point() + 
-			geom_smooth(method = "loess") + 
+			geom_smooth(method = "loess", colour = "#00CDCD") + 
 			theme.ggplot() + 
 			xlab(input$x_label) +
 			ylab(input$y_label) 

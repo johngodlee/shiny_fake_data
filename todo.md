@@ -5,6 +5,11 @@
 		* https://github.com/vrk/beziertool/
 			* https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/bezierCurveTo
 		* https://www.aridhia.com/blog/the-sky-is-not-the-limit-embedding-raw-html-and-javascript-to-create-dynamic-ui-elements-in-shiny-applications/ 
-	* Should I limit myself to 2 continuous distributions. Adding lots of conditionals for categorical variables is confusing and difficult
-	* Generating the min and max from the mean is not a good way of doing things. Think of better method
-	* Is there a way to make the standard deviation in x change with different values of y and vice versa - non-independent error 
+
+* Add in other distribution - will need to use nested if else statements to get this to work. Groan
+	* exponential
+	* MORE
+	
+	
+	
+* Is there a problem in the distribution switching when min bigger than max?	
