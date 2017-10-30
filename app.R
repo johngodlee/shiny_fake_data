@@ -48,7 +48,8 @@ ui <- fluidPage(
    								label = "Distribution Type", 
    								choices  = c("Linear" = "lin", 
    														 "Quadratic" = "quad",
-   														 "Exponential" = "exp")),
+   														 "Exponential" = "exp",
+   														 "Sigmoidal" = "sig")),
    		h1("X"),
    			textInputRow(inputId = "x_lim_min", label = "X min", value = 0.0),
    			textInputRow(inputId = "x_lim_max", label = "X max", value = 5),
@@ -75,6 +76,11 @@ ui <- fluidPage(
    										 						 value = 2, min = 1, step = 1),
    										 numericInput(inputId = "exp_base", "Set the Exponential Base (b)",
    										 						 value = 2, min = 1, step = 1)),
+   		conditionalPanel(condition = "input.distrib_type == 'sig'",
+   										 hr(),
+   										 tags$p(withMathJax("$$Y = \\frac{1}{a+e^-X}$$")),
+   										 numericInput(inputId = "sig_coef", "Set the Sigmoidal Coefficient (a)",
+   										 						 value = 2, min = 1, step = 1)),
    		hr(),
    		downloadButton("download", "Download `.csv`")
    	),
@@ -99,6 +105,7 @@ server <- function(input, output) {
 	# Functions for data distributions
 	fn_quad <- function(x){input$quad_quad_coef *x^2 + input$quad_lin_coef * x}
 	fn_exp <- function(x){input$exp_coef * input$exp_base^x}
+	fn_sig <- function(x){1 / (input$sig_coef + exp(1)^-x)}
 	
 	# Create a dataframe
 	df <- reactive({
@@ -115,12 +122,18 @@ server <- function(input, output) {
 									 										 length.out = input$xy_n)),
 									 				 factor = input$y_noise)
 									 			} else {
+									 				if (input$distrib_type == "quad") {
 									 	jitter(fn_quad(seq(from = input$y_lim_min, 
 									 										 to = input$y_lim_max, 
 									 										 length.out = input$xy_n)),
 									 				 factor = input$y_noise)
-									 	}})
-									 	})
+									 				} else {
+									 					jitter(fn_sig(seq(from = input$y_lim_min, 
+									 														 to = input$y_lim_max, 
+									 														 length.out = input$xy_n)),
+									 								 factor = input$y_noise)}
+									 				}})
+	})
 	
 	# Create an output table of the head of the data frame
 	output$head <- renderTable(head(df()))
