@@ -5,11 +5,5 @@
 		* https://github.com/vrk/beziertool/
 			* https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/bezierCurveTo
 		* https://www.aridhia.com/blog/the-sky-is-not-the-limit-embedding-raw-html-and-javascript-to-create-dynamic-ui-elements-in-shiny-applications/ 
-
-* Add in other distribution - will need to use nested if else statements to get this to work. Groan
-	* exponential
-	* MORE
-	
-	
 	
 * Is there a problem in the distribution switching when min bigger than max?	
